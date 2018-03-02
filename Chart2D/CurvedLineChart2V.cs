@@ -464,11 +464,17 @@ namespace Chart2D
                 ChartCursor2V cursor = _GetNearestPtCursor(pt.X, pt.Y, cc_cursors);
                 if (cursor != null)
                 {
-                    StringBuilder sb = new StringBuilder();
                     g.FillEllipse(_OutlinePtBrush, cursor.Pt_x - _CURSOR_HALF_SIDE, cursor.Pt_y - _CURSOR_HALF_SIDE, _CURSOR_HALF_SIDE << 1, _CURSOR_HALF_SIDE << 1);
-                    sb.Append("X:").Append(cc.XAxisValueFormat.Format(cursor.X_max)).Append(cc.XAxisUnitName).Append("-Y:").Append(cc.YAxisValueFormat.Format(cursor.Y_max)).Append(cc.YAxisUnitName).Append("\r\n");
-                    string info = sb.ToString();
-                    sb.Clear();
+                    string info = "";
+                    if (CursorFormat == null)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append("X:").Append(cc.XAxisValueFormat.Format(cursor.X_max)).Append(cc.XAxisUnitName).Append("-Y:").Append(cc.YAxisValueFormat.Format(cursor.Y_max)).Append(cc.YAxisUnitName).Append("\r\n");
+                        info = sb.ToString();
+                        sb.Clear();
+                    }
+                    else
+                        info = CursorFormat.Format<int>(cursor.YIndex);
                     if (!string.IsNullOrEmpty(info))
                         _DrawCursor(g, info, new Point(cursor.Pt_x, cursor.Pt_y), _AxesFont, cc.Brush, _DragRectBrush, _DestImage.Width, _DestImage.Height);
                 }

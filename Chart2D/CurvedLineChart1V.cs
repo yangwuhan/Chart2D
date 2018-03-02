@@ -302,6 +302,10 @@ namespace Chart2D
         protected float _XAxisMaxValueUsed;
         protected float _XAxisMinValueUsed;
 
+        /* 游标格式化对象
+        */
+        public DataFormat CursorFormat { get; set; }
+
         #endregion
 
         #region 函数
@@ -332,6 +336,7 @@ namespace Chart2D
             XAxisUnitName = "";
             _XAxisMaxValueUsed = 0.0f;
             _XAxisMinValueUsed = 0.0f;
+            CursorFormat = null;
             this.Paint += new PaintEventHandler((object sender, PaintEventArgs e) =>
             {
                 if (_DestImage != null)
@@ -1111,17 +1116,23 @@ namespace Chart2D
                 ChartCursor1V cursor = _GetNearestPtCursor(pt.X, cc_cursors);
                 if (cursor != null)
                 {
-                    StringBuilder sb = new StringBuilder();
                     g.FillEllipse(_OutlinePtBrush, cursor.Pt_x - _CURSOR_HALF_SIDE, cursor.Pt_y - _CURSOR_HALF_SIDE, _CURSOR_HALF_SIDE << 1, _CURSOR_HALF_SIDE << 1);
-                    sb.Append("X:").Append(XAxisValueFormat.Format(cursor.YIndex * cc.Delta));
-                    if (!string.IsNullOrEmpty(XAxisUnitName))
-                        sb.Append("(").Append(XAxisUnitName).Append(")");
-                    sb.Append("Y:").Append(cc.YAxisValueFormat.Format(cursor.Y_max));
-                    if (!string.IsNullOrEmpty(cc.YAxisUnitName))
-                        sb.Append("(").Append(cc.YAxisUnitName).Append(")");
-                    sb.Append("\r\n");
-                    string info = sb.ToString();
-                    sb.Clear();
+                    string info = "";
+                    if(CursorFormat == null)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append("X:").Append(XAxisValueFormat.Format(cursor.YIndex * cc.Delta));
+                        if (!string.IsNullOrEmpty(XAxisUnitName))
+                            sb.Append("(").Append(XAxisUnitName).Append(")");
+                        sb.Append("Y:").Append(cc.YAxisValueFormat.Format(cursor.Y_max));
+                        if (!string.IsNullOrEmpty(cc.YAxisUnitName))
+                            sb.Append("(").Append(cc.YAxisUnitName).Append(")");
+                        sb.Append("\r\n");
+                        info = sb.ToString();
+                        sb.Clear();
+                    }
+                    else
+                        info = CursorFormat.Format<int>(cursor.YIndex);
                     if (!string.IsNullOrEmpty(info))
                         _DrawCursor(g, info, new Point(cursor.Pt_x, cursor.Pt_y), _AxesFont, cc.Brush, _DragRectBrush, _DestImage.Width, _DestImage.Height);
                 }
