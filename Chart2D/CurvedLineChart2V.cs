@@ -476,7 +476,7 @@ namespace Chart2D
                     else
                         info = CursorFormat.Format<int>(cursor.YIndex);
                     if (!string.IsNullOrEmpty(info))
-                        _DrawCursor(g, info, new Point(cursor.Pt_x, cursor.Pt_y), _AxesFont, cc.Brush, _DragRectBrush, _DestImage.Width, _DestImage.Height);
+                        _DrawCursor(g, info, new Point(cursor.Pt_x, cursor.Pt_y), cc.Pen, _AxesFont, cc.Brush, _DragRectBrush, _DestImage.Width, _DestImage.Height);
                 }
             }
         }

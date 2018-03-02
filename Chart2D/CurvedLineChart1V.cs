@@ -21,7 +21,24 @@ namespace Chart2D
         
         /* 背景颜色
          */
-        public Color ChartBackColor { get; set; }
+        protected Color _ChartBackColor;
+        public Color ChartBackColor 
+        {
+            get { return _ChartBackColor; }
+            set
+            {
+                _ChartBackColor = value;
+                _ChartBackBrush = new SolidBrush(_ChartBackColor);
+            }
+        }
+
+        /*
+         */
+        protected Brush _ChartBackBrush;
+        public Brush ChartBackBrush
+        {
+            get { return _ChartBackBrush; }
+        }
 
         /* 定时绘图定时间隔，单位：毫秒
          */ 
@@ -1084,7 +1101,7 @@ namespace Chart2D
 
         /* 绘制单条曲线的游标
          */
-        protected void _DrawCursor(Graphics g, string str, Point point_pt, Font font, Brush brush, Brush brush_back, int width, int height)
+        protected void _DrawCursor(Graphics g, string str, Point point_pt, Pen pen, Font font, Brush brush, Brush brush_back, int width, int height)
         {
             SizeF szf = g.MeasureString(str, font);
             PointF pf_draw = new PointF();
@@ -1100,7 +1117,9 @@ namespace Chart2D
                 if(pf_draw.X + szf.Width > width)
                     pf_draw.X = point_pt.X - _CURSOR_HALF_SIDE - szf.Width - 1;
             }
-            g.FillRectangle(brush_back, new RectangleF(pf_draw.X, pf_draw.Y, szf.Width, szf.Height));
+            RectangleF rf = new RectangleF(pf_draw.X, pf_draw.Y, szf.Width, szf.Height);
+            g.FillRectangle(ChartBackBrush, rf);
+            g.DrawRectangle(pen, rf.Left, rf.Top, rf.Width, rf.Height);
             g.FillRectangle(brush, new Rectangle(point_pt.X - 2, point_pt.Y - 2, 4, 4));
             g.DrawString(str, font, brush, pf_draw);
         }        
@@ -1134,7 +1153,7 @@ namespace Chart2D
                     else
                         info = CursorFormat.Format<int>(cursor.YIndex);
                     if (!string.IsNullOrEmpty(info))
-                        _DrawCursor(g, info, new Point(cursor.Pt_x, cursor.Pt_y), _AxesFont, cc.Brush, _DragRectBrush, _DestImage.Width, _DestImage.Height);
+                        _DrawCursor(g, info, new Point(cursor.Pt_x, cursor.Pt_y), cc.Pen, _AxesFont, cc.Brush, _DragRectBrush, _DestImage.Width, _DestImage.Height);
                 }
             }               
         }
