@@ -104,6 +104,10 @@ namespace Chart2D
         [NonSerialized]
         internal Dictionary<int, ChartCursor1V> _ChartCursors1V = new Dictionary<int, ChartCursor1V>();
 
+        /** Y值警戒线
+         */
+        protected List<PatrolLine> _YPatrolLines;
+
         #endregion
 
         #region 函数
@@ -121,7 +125,8 @@ namespace Chart2D
             YAxisMinValueUsed = YAxisMinValue = -20.0f;
             YAxisData = new List<float>();
             YAxisKdFormat = new DataFormat(EDataFormat.FORMAT_STRING, "{0}");
-            YAxisValueFormat = new DataFormat(EDataFormat.FORMAT_STRING, "{0}");                    
+            YAxisValueFormat = new DataFormat(EDataFormat.FORMAT_STRING, "{0}");
+            _YPatrolLines = new List<PatrolLine>();
         }
 
         /* 获取数据最大绝对值、最大值、最小值
@@ -470,6 +475,51 @@ namespace Chart2D
                 range = 1000000000000000000;
             }
             return range;
+        }
+
+        /** 添加警戒线
+         */
+        public void PatrolLineAdd(PatrolLine pl)
+        {
+            if (pl == null || pl.Type != EPatrolLineType.Y)
+                return;
+            if (_YPatrolLines == null)
+                _YPatrolLines = new List<PatrolLine>();
+            _YPatrolLines.Add(pl);
+        }
+        /** 移除警戒线
+         */
+        public void RemovePatrolLine(EPatrolLineType type, int index)
+        {
+            if (type != EPatrolLineType.Y || _YPatrolLines == null || _YPatrolLines.Count == 0 ||
+                index < 0 || index >= _YPatrolLines.Count)
+                return;
+            _YPatrolLines.RemoveAt(index);
+        }
+        /** 警戒线数目
+         */
+        public int PatrolLineCount(EPatrolLineType type)
+        {
+            if (type != EPatrolLineType.Y || _YPatrolLines == null || _YPatrolLines.Count == 0)
+                return 0;
+            else
+                return _YPatrolLines.Count;
+        }
+        /** 所有警戒线
+         */
+        public List<PatrolLine> AllPatrolLines(EPatrolLineType type)
+        {
+            var ret = new List<PatrolLine>();
+            if (type != EPatrolLineType.Y || _YPatrolLines == null || _YPatrolLines.Count == 0)
+                return ret;
+            else
+            {
+                foreach (PatrolLine pl in _YPatrolLines)
+                {
+                    ret.Add(pl.Clone() as PatrolLine);
+                }
+                return ret;
+            }
         }
 
         #endregion

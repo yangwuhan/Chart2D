@@ -46,7 +46,7 @@ namespace Chart2D
 
         /* 网格的Y轴向分割数
          */
-        protected int _GridYSpliteCount = 10;
+        protected int _GridYSpliteCount = 5;
         public int GridYSpliteCount 
         {
             get { return _GridYSpliteCount; }
@@ -323,6 +323,14 @@ namespace Chart2D
         */
         public DataFormat CursorFormat { get; set; }
 
+        /** 是否显示栅格的竖线条
+         */
+        public bool ShowAssistYAxis { get; set; }
+
+        /** 是否显示栅格的横线条
+         */
+        public bool ShowAssistXAxis { get; set; }        
+
         #endregion
 
         #region 函数
@@ -354,6 +362,7 @@ namespace Chart2D
             _XAxisMaxValueUsed = 0.0f;
             _XAxisMinValueUsed = 0.0f;
             CursorFormat = null;
+            ShowAssistXAxis = ShowAssistYAxis = true;            
             this.Paint += new PaintEventHandler((object sender, PaintEventArgs e) =>
             {
                 if (_DestImage != null)
@@ -577,35 +586,41 @@ namespace Chart2D
             if (!IsSpaceEnoughToDraw(width, height))
                 return;
             Rectangle rect_grid = _GetGridRect(width, height);
-            //X轴向网格线
-            int rows = _GridYSpliteCount;
-            float row_height = (float)rect_grid.Height / (float)rows;
-            int x1 = rect_grid.X;
-            int x2 = x1 + rect_grid.Width;
-            int y1 = 0;
-            int y2 = 0;
-            for (int i = 0; i < rows; ++i)
+            if(ShowAssistXAxis)
             {
-                if (i == 0)
-                    y2 = y1 = rect_grid.Y;
-                else
-                    y2 = y1 = (int)Math.Round((float)rect_grid.Y + (float)i * row_height);
-                g.DrawLine(_AxesPen, x1, y1, x2, y2);
-            }
-            //Y轴向网格线
-            int cols = _GridXSpliteCount;
-            float col_width = (float)rect_grid.Width / (float)cols;
-            x1 = x2 = 0;
-            y1 = rect_grid.Y;
-            y2 = y1 + rect_grid.Height;
-            for (int i = 0; i < cols; ++i)
+                //X轴向网格线
+                int rows = _GridYSpliteCount;
+                float row_height = (float)rect_grid.Height / (float)rows;
+                int x1 = rect_grid.X;
+                int x2 = x1 + rect_grid.Width;
+                int y1 = 0;
+                int y2 = 0;
+                for (int i = 0; i < rows; ++i)
+                {
+                    if (i == 0)
+                        y2 = y1 = rect_grid.Y;
+                    else
+                        y2 = y1 = (int)Math.Round((float)rect_grid.Y + (float)i * row_height);
+                    g.DrawLine(_AxesPen, x1, y1, x2, y2);
+                }
+            }            
+            if(ShowAssistYAxis)
             {
-                if (i != cols - 1)
-                    x2 = x1 = (int)Math.Round((float)rect_grid.X + (float)(i + 1) * col_width);
-                else
-                    x2 = x1 = rect_grid.X + rect_grid.Width - 1;
-                g.DrawLine(_AxesPen, x1, y1, x2, y2);
-            }
+                //Y轴向网格线
+                int cols = _GridXSpliteCount;
+                float col_width = (float)rect_grid.Width / (float)cols;
+                int x1 = 0, x2 = 0;
+                int y1 = rect_grid.Y;
+                int y2 = y1 + rect_grid.Height;
+                for (int i = 0; i < cols; ++i)
+                {
+                    if (i != cols - 1)
+                        x2 = x1 = (int)Math.Round((float)rect_grid.X + (float)(i + 1) * col_width);
+                    else
+                        x2 = x1 = rect_grid.X + rect_grid.Width - 1;
+                    g.DrawLine(_AxesPen, x1, y1, x2, y2);
+                }
+            }            
             //标题
             if(_TitleYSpace > 0 && !string.IsNullOrEmpty(Title))
             {
@@ -675,12 +690,48 @@ namespace Chart2D
             }
         }
 
+        /** Y坐标的所有刻度值（从下往上），注意，kdzs是从小到大的序列，而y_poses是从大到小的序列
+         */
+        protected void _AllYKdPosAndVal(Rectangle rect_axis, Rectangle rect_grid, float f_min, float f_max, 
+                                            ref List<float> kdzs, ref List<int> y_poses)
+        {
+            kdzs = new List<float>();
+            y_poses = new List<int>();
+            float row_height = (float)rect_grid.Height / (float)_GridYSpliteCount;
+            float v_span = (f_max - f_min) / _GridYSpliteCount;
+            if (v_span < 0)
+                v_span = 0;
+            for (int i = 0; i < _GridYSpliteCount + 1; ++i)
+            {
+                if (i == 0)
+                {
+                    kdzs.Add(f_min);
+                    y_poses.Add(rect_axis.Y + rect_axis.Height);
+                }                   
+                else if (i == _GridYSpliteCount)
+                {
+                    kdzs.Add(f_max);
+                    y_poses.Add(rect_axis.Y);
+                }
+                else
+                {
+                    if (f_min == -f_max && i == _GridYSpliteCount / 2)
+                        kdzs.Add(0.0f);
+                    else
+                        kdzs.Add(f_min + i * v_span);
+                    y_poses.Add((int)Math.Round(rect_axis.Y + row_height * (_GridYSpliteCount - i)));
+                }                
+            }
+        }
+
         /* 绘制单个Y坐标轴名称/单位和刻度线值
          */
         protected void _DrawSingleYAxisVal(Graphics g, Rectangle rect_axis, Rectangle rect_grid, string name_unit,
                                         Font font, Brush brush,
-                                        float f_min, float f_max, DataFormat df)
+                                        float f_min, float f_max, DataFormat df,
+                                        List<float> kdzs, List<int> y_poses)        
         {
+            
             Point pt_center = new Point(rect_axis.X + (int)Math.Floor((float)_AxesSpace / 4.0f), rect_axis.Y + rect_axis.Height / 2);
             _DrawYAxisText(g, name_unit, pt_center, 0, font, brush); //名称/单位
             //刻度值
@@ -691,32 +742,90 @@ namespace Chart2D
             float row_height = (float)rect_grid.Height / (float)_GridYSpliteCount;
             for (int i = 0; i < _GridYSpliteCount + 1; ++i)
             {
-                float v_kd = 0;
+                float v_kd = kdzs[i];
+                int y_pos = y_poses[i];
                 int h_lean = 0;
                 if (i == 0)
                 {
                     h_lean = -1;
-                    v_kd = f_min;
-                    pt_center = new Point(kd_center_x, rect_axis.Y + rect_axis.Height);
+                    pt_center = new Point(kd_center_x, y_pos);
                 }
                 else if (i == _GridYSpliteCount)
                 {
                     h_lean = 1;
-                    v_kd = f_max;
-                    pt_center = new Point(kd_center_x, rect_axis.Y);
+                    pt_center = new Point(kd_center_x, y_pos);
                 }
                 else
                 {
                     h_lean = 0;
-                    if (f_min == -f_max && i == _GridYSpliteCount / 2)
-                        v_kd = 0.0f;
-                    else
-                        v_kd = f_min + i * v_span;
-                    pt_center = new Point(kd_center_x, (int)Math.Round(rect_axis.Y + row_height * (_GridYSpliteCount - i)));
+                    //if (f_min == -f_max && i == _GridYSpliteCount / 2)
+                    //    v_kd = 0.0f;
+                    //else
+                    //    v_kd = f_min + i * v_span;                    
+                    pt_center = new Point(kd_center_x, y_pos);
                 }
                 string s_kd = df.Format(v_kd);
                 _DrawYAxisText(g, s_kd, pt_center, h_lean, font, brush); //刻度值
             }
+        }
+
+        /** 绘制单个Y坐标轴的Y轴警戒线
+         */ 
+        protected void _DrawSingleYPatrolLines(Graphics g, Rectangle rect_axis, Rectangle rect_grid, List<float> kdzs, List<int> y_poses, List<PatrolLine> pls)
+        {
+            foreach(PatrolLine pl in pls)
+            {
+                float v = pl.Value;
+                if (v < kdzs[0] || v > kdzs[kdzs.Count - 1])
+                    continue;                
+                int in_kd_index = -1;//是否落在刻度线上
+                int kd_index_start = -1;//是否落在2条刻度线之间
+                int i = 0;
+                for(i = 0; i < kdzs.Count; ++i)
+                {
+                    if(v == kdzs[i])
+                    {
+                        in_kd_index = i;
+                        break;
+                    }
+                    else
+                    {
+                        if(i < kdzs.Count - 1)
+                        {
+                            if(v > kdzs[i] && v < kdzs[i + 1])
+                            {
+                                kd_index_start = i;
+                                break;
+                            }
+                        }
+                        //else //i == kdzs.Count - 1 //v值应该在 kdzs[0]<=v<=kdzs[kdzs.Count-1]范围，此时i==kdzs.Count - 1已经是异常了
+                        //{ }
+                    }
+                }
+                if (in_kd_index != -1)
+                {
+                    Pen p = new Pen(pl.LineColor);
+                    p.DashStyle = DashStyle.Dash;
+                    int x1 = rect_grid.X;
+                    int x2 = rect_grid.X + rect_grid.Width;
+                    int y1, y2;
+                    y1 = y2 = y_poses[in_kd_index];
+                    g.DrawLine(p, x1, y1, x2, y2);
+                }else if(kd_index_start != -1)
+                {
+                    Pen p = new Pen(pl.LineColor);
+                    p.DashStyle = DashStyle.Dash;
+                    int x1 = rect_grid.X;
+                    int x2 = rect_grid.X + rect_grid.Width;
+                    int y1, y2;
+                    y1 = y2 = (int)((float)y_poses[kd_index_start] - (v - (float)kdzs[kd_index_start]) * ((float)y_poses[kd_index_start] - (float)y_poses[kd_index_start + 1]) / ((float)kdzs[kd_index_start + 1] - (float)kdzs[kd_index_start]));
+                    if (y1 > y_poses[kd_index_start])
+                        y1 = y2 = y_poses[kd_index_start];
+                    else if (y1 < y_poses[kd_index_start + 1])
+                        y1 = y2 = y_poses[kd_index_start + 1];
+                    g.DrawLine(p, x1, y1, x2, y2);
+                }
+            }            
         }
 
         /* 绘制Y坐标轴
@@ -768,7 +877,17 @@ namespace Chart2D
                     _YAxisMaxValueUsed = YAxisMaxValue;
                     _YAxisMinValueUsed = YAxisMinValue;
                 }
-                _DrawSingleYAxisVal(g, rect_axis, rect_grid, name_unit, _AxesFont, _AxesBrush, _YAxisMinValueUsed, _YAxisMaxValueUsed, YAxisKdFormat);
+                List<float> kdzs = null;
+                List<int> y_poses = null;
+                _AllYKdPosAndVal(rect_axis, rect_grid, _YAxisMinValueUsed, _YAxisMaxValueUsed, ref kdzs, ref y_poses);
+                if (kdzs != null && kdzs.Count == _GridYSpliteCount + 1 &&
+                    y_poses != null && y_poses.Count == _GridYSpliteCount + 1)
+                {
+                    _DrawSingleYAxisVal(g, rect_axis, rect_grid, name_unit, _AxesFont, _AxesBrush, 
+                                            _YAxisMinValueUsed, _YAxisMaxValueUsed, YAxisKdFormat,
+                                            kdzs, y_poses);
+
+                }
             }
             else
             {
@@ -801,7 +920,20 @@ namespace Chart2D
                         cc.YAxisMaxValueUsed = cc.YAxisMaxValue;
                         cc.YAxisMinValueUsed = cc.YAxisMinValue;
                     }
-                    _DrawSingleYAxisVal(g, rect_axis_single, rect_grid, name_unit, _AxesFont, cc.Brush, cc.YAxisMinValueUsed, cc.YAxisMaxValueUsed, cc.YAxisKdFormat);
+                    List<float> kdzs = null;
+                    List<int> y_poses = null;
+                    _AllYKdPosAndVal(rect_axis_single, rect_grid, cc.YAxisMinValueUsed, cc.YAxisMaxValueUsed, ref kdzs, ref y_poses);
+                    if (kdzs != null && kdzs.Count == _GridYSpliteCount + 1 &&
+                        y_poses != null && y_poses.Count == _GridYSpliteCount + 1)
+                    {
+                        _DrawSingleYAxisVal(g, rect_axis_single, rect_grid, name_unit, _AxesFont, cc.Brush, 
+                                                cc.YAxisMinValueUsed, cc.YAxisMaxValueUsed, cc.YAxisKdFormat,
+                                                kdzs, y_poses);
+                        if (cc.PatrolLineCount(EPatrolLineType.Y) > 0)
+                        {
+                            _DrawSingleYPatrolLines(g, rect_axis_single, rect_grid, kdzs, y_poses, cc.AllPatrolLines(EPatrolLineType.Y));
+                        }
+                    }
                 }                
             }
         }
@@ -1201,8 +1333,8 @@ namespace Chart2D
                     _DrawCursors(g, mp);
                 }
             }
-        }
-        
-        #endregion        
+        }        
+
+        #endregion
     }
 }

@@ -266,7 +266,17 @@ namespace Chart2D
                     _YAxisMaxValueUsed = YAxisMaxValue;
                     _YAxisMinValueUsed = YAxisMinValue;
                 }
-                _DrawSingleYAxisVal(g, rect_axis, rect_grid, name_unit, _AxesFont, _AxesBrush, _YAxisMinValueUsed, _YAxisMaxValueUsed, YAxisKdFormat);
+                List<float> kdzs = null;
+                List<int> y_poses = null;
+                _AllYKdPosAndVal(rect_axis, rect_grid, _YAxisMinValueUsed, _YAxisMaxValueUsed, ref kdzs, ref y_poses);
+                if (kdzs != null && kdzs.Count == _GridYSpliteCount + 1 &&
+                    y_poses != null && y_poses.Count == _GridYSpliteCount + 1)
+                {
+                    _DrawSingleYAxisVal(g, rect_axis, rect_grid, name_unit, _AxesFont, _AxesBrush, 
+                                        _YAxisMinValueUsed, _YAxisMaxValueUsed, YAxisKdFormat,
+                                        kdzs, y_poses);
+
+                }
             }
             else
             {
@@ -299,7 +309,20 @@ namespace Chart2D
                         cc.YAxisMaxValueUsed = cc.YAxisMaxValue;
                         cc.YAxisMinValueUsed = cc.YAxisMinValue;
                     }
-                    _DrawSingleYAxisVal(g, rect_axis_single, rect_grid, name_unit, _AxesFont, cc.Brush, cc.YAxisMinValueUsed, cc.YAxisMaxValueUsed, cc.YAxisKdFormat);
+                    List<float> kdzs = null;
+                    List<int> y_poses = null;
+                    _AllYKdPosAndVal(rect_axis_single, rect_grid, cc.YAxisMinValueUsed, cc.YAxisMaxValueUsed, ref kdzs, ref y_poses);
+                    if (kdzs != null && kdzs.Count == _GridYSpliteCount + 1 &&
+                        y_poses != null && y_poses.Count == _GridYSpliteCount + 1)
+                    {
+                        _DrawSingleYAxisVal(g, rect_axis_single, rect_grid, name_unit, _AxesFont, cc.Brush, 
+                                            cc.YAxisMinValueUsed, cc.YAxisMaxValueUsed, cc.YAxisKdFormat,
+                                            kdzs, y_poses);
+                        if(cc.PatrolLineCount(EPatrolLineType.Y) > 0)
+                        {
+                            _DrawSingleYPatrolLines(g, rect_axis_single, rect_grid, kdzs, y_poses, cc.AllPatrolLines(EPatrolLineType.Y));
+                        }
+                    }
                 }
             }
         }
