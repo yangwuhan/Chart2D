@@ -98,7 +98,7 @@ namespace Chart2D
                     v_kd = f_min;
                     pt_center = new Point(rect_axis.X, kd_center_y);
                 }
-                else if (i == _GridYSpliteCount)
+                else if (i == _GridXSpliteCount)
                 {
                     h_lean = 1;
                     v_kd = f_max;
@@ -422,12 +422,20 @@ namespace Chart2D
                             continue;
                         r.X = pt_x - 2;
                         r.Y = pt_y - 2;
-                        g.DrawRectangle(cc.Pen, r);
+                        if(DataPointShape == EDataPointShape.RECTANGLE4E)
+                            g.DrawRectangle(cc.Pen, r);
+                        else
+                            g.FillEllipse(cc.Brush, pt_x - 1, pt_y - 1, 2, 2);
                     }
                 }
             }                
             else if (pts.Count == 1)
-                g.DrawRectangle(cc.Pen, new Rectangle(pts[0].X - 2, pts[0].Y - 2, 4, 4));
+            {
+                if (DataPointShape == EDataPointShape.RECTANGLE4E)
+                    g.DrawRectangle(cc.Pen, new Rectangle(pts[0].X - 2, pts[0].Y - 2, 4, 4));
+                else
+                    g.FillEllipse(cc.Brush, pts[0].X - 1, pts[0].Y - 1, 2, 2);
+            }
         }        
 
         /* 获取最接近的点的游标

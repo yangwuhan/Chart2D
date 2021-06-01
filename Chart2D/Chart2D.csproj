@@ -62,6 +62,7 @@
     <Compile Include="CurvedLineChart2V.Designer.cs">
       <DependentUpon>CurvedLineChart2V.cs</DependentUpon>
     </Compile>
+    <Compile Include="EDataPointShape.cs" />
     <Compile Include="EPatrolLineType.cs" />
     <Compile Include="EDataFormat.cs" />
     <Compile Include="PatrolLine.cs" />

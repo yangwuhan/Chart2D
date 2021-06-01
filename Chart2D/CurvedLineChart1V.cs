@@ -331,6 +331,10 @@ namespace Chart2D
          */
         public bool ShowAssistXAxis { get; set; }        
 
+        /** 数据点比较分散时，单个数据点的形状
+         */ 
+        public EDataPointShape DataPointShape { get; set; }
+
         #endregion
 
         #region 函数
@@ -362,7 +366,8 @@ namespace Chart2D
             _XAxisMaxValueUsed = 0.0f;
             _XAxisMinValueUsed = 0.0f;
             CursorFormat = null;
-            ShowAssistXAxis = ShowAssistYAxis = true;            
+            ShowAssistXAxis = ShowAssistYAxis = true;
+            DataPointShape = EDataPointShape.RECTANGLE4E;
             this.Paint += new PaintEventHandler((object sender, PaintEventArgs e) =>
             {
                 if (_DestImage != null)
@@ -1334,6 +1339,16 @@ namespace Chart2D
                 }
             }
         }        
+          
+        /** 拷贝绘制的曲线图像
+         */ 
+        public Bitmap CloneBmp()
+        {
+            if (_DestImage == null)
+                return null;
+            else
+                return _DestImage.Clone() as Bitmap;
+        }
 
         #endregion
     }
