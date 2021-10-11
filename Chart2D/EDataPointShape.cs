@@ -8,6 +8,7 @@ namespace Chart2D
 {
     public enum EDataPointShape
     {
+        DOT_ONE_PIX = 0, //单像素点
         RECTANGLE4E = 1,  //边长为4pix的空心正方形
         CIRCLE2 = 2,     //直径为2pix的实心圆形
     }
